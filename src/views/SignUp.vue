@@ -27,11 +27,7 @@
       <label for="userNumber">Enter Contact Number</label><br />
       <input type="number" id="userNumber" v-model.lazy="dt.userNumber" /><br />
       <label for="userAddress">Enter your Address</label><br />
-      <input
-        type="text"
-        id="userAddress"
-        v-model.lazy="dt.userAddress"
-      /><br />
+      <input type="text" id="userAddress" v-model.lazy="dt.userAddress" /><br />
       <label for="userCity">Pincode</label><br />
       <input type="number" id="userCity" v-model.lazy="dt.userCity" /><br />
       <br />
@@ -39,17 +35,23 @@
     </form>
   </div>
 
-
   <div>
-    <otpVerify v-if="registered" :email="dt?.userEmail" @back="back" />
+    <keep-alive><otpVerify
+      v-if="registered"
+      :email="dt?.userEmail"
+      @back="back"
+      @verified="verifiedRegistering"
+    />
+    </keep-alive>
   </div>
 </template>
 
 <script>
-import otpVerify from '../components/otpVerify.vue'
+import axios from "axios";
+import otpVerify from "../components/otpVerify.vue";
 export default {
-  components:{
-    otpVerify
+  components: {
+    otpVerify,
   },
   data() {
     return {
@@ -65,8 +67,8 @@ export default {
     };
   },
   methods: {
-    back(){
-      this.registered=false;
+    back() {
+      this.registered = false;
     },
     register() {
       if (
@@ -80,12 +82,23 @@ export default {
         alert("Please fill all the fields");
       } else {
         if (this.dt.userPassword == this.dt.confirmPassword) {
-          console.log(this.dt);
-          this.registered= !this.registered;
+          console.log(this.dt.userEmail);
+          axios
+            .get(`http://localhost:6969/sendmail/${this.dt.userEmail}`)
+            .then((response) => console.log(response))
+            .catch((error) => console.log(error));
+          this.registered = !this.registered;
         } else {
           alert("Passwords do not match");
         }
       }
+    },
+    verifiedRegistering() {
+      console.log("hello from verified");
+      axios
+        .post("http://localhost:6969/registration", this.dt)
+        .then((response) => console.log(response))
+        .catch((error) => console.log(error));
     },
   },
 };
