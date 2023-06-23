@@ -13,7 +13,7 @@ public class Mailer {
     @Autowired
     private JavaMailSender mailSender;
     public void sendMail (String reciever,String otp){
-        System.out.println(reciever +" "+otp);
+//        System.out.println(reciever +" "+otp);
         String subject="otp verification";
         SimpleMailMessage message =new SimpleMailMessage();
         message.setFrom("collegebuddy4u@gmail.com");

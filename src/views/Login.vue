@@ -7,7 +7,7 @@
         type="email"
         id="form1Example1"
         :class="css"
-        v-model.lazy="data.loginEmail"
+        v-model.lazy="dt.email"
       />
       <label class="form-label" for="form1Example1">Email address</label>
     </div>
@@ -18,30 +18,12 @@
         type="password"
         id="form1Example2"
         :class="css"
-        v-model.lazy="data.loginPass"
+        v-model.lazy="dt.loginPass"
       />
       <label class="form-label" for="form1Example2">Password</label>
     </div>
-
-    <!-- 2 column grid layout for inline styling -->
-    <div class="row mb-4">
-      <div class="col d-flex justify-content-center">
-        <!-- Checkbox -->
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="form1Example3"
-            checked
-          />
-          <label class="form-check-label" for="form1Example3">
-            Remember me
-          </label>
-        </div>
-      </div>
-
+    <div>
       <div class="col">
-        <!-- Simple link -->
         <a href="#!">Forgot password?</a>
       </div>
     </div>
@@ -54,21 +36,35 @@
 </template>
 
 <script>
+import axios from "axios";
 export default {
   data() {
     return {
       css: ["form-control"],
-      data: {
-        loginEmail: "",
-        loginPass: "",
-        error: false,
+      dt: {
+        email: "",
+        password: "",
       },
     };
   },
   methods: {
-    login() {
-      if (this.data?.loginEmail && this.data.loginPass) {
-        console.log(`${this.data.loginEmail}  ${this.data.loginPass}`);
+    async login() {
+      let con =""
+      if (this.dt?.email && this.dt.loginPass) {
+        await axios
+          .post("http://localhost:6969/login", this.dt)
+          .then((res) => {
+            con=res.data;
+          })
+          .catch((e) => console.log(e));
+          console.log(con);
+          if(con == 'success'){
+            alert("success");
+          }if (con=='wrong') {
+            alert("wrong password");
+          }if(con=='notregistered'){
+            alert("user not registered");
+          }
         this.css = this.css.filter((item) => item !== "error");
       } else {
         alert("please fill the data !");
