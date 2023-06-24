@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Products,Long> {
     @Transactional
     void deleteBySellerId(Long sellerId);
-    public List<Products> findAllBySellerId(Long id);
+     List<Products> findAllBySellerId(Long id);
     Products findProductsByProductId(Long id);
 
 }

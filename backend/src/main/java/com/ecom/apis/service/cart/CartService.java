@@ -12,4 +12,7 @@ public interface CartService {
     Map<Products, Long> listOfProducts() throws NotFoundException;
 
     String deleteCartItem(Long cartProductID) throws NotFoundException;
+
+    Double cartAmount() throws NotFoundException;
+
 }

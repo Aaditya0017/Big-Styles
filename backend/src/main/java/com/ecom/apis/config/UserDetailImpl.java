@@ -1,4 +1,4 @@
-package com.ecom.apis.securityConfig;
+package com.ecom.apis.config;
 
 import com.ecom.apis.entity.UserEntity;
 import org.springframework.security.core.GrantedAuthority;

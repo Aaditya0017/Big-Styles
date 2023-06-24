@@ -1,6 +1,6 @@
 package com.ecom.apis.Jwt;
 
-import com.ecom.apis.securityConfig.UserDetailService;
+import com.ecom.apis.config.UserDetailService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

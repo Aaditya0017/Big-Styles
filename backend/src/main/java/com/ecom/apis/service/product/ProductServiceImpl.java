@@ -115,4 +115,11 @@ public class ProductServiceImpl implements ProductService{
     }
 
 
+    public void productQuantityUpdate(List<Products> productsInCart) {
+        for (Products product: productsInCart){
+            Products productsByProductId = productRepository.findProductsByProductId(product.getProductId());
+            productsByProductId.setQuantity(productsByProductId.getQuantity()-product.getQuantity());
+            saveProduct(productsByProductId);
+        }
+    }
 }

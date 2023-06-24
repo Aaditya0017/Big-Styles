@@ -29,7 +29,7 @@ public class Products {
     private Boolean sale = false;
     private int salePrice=0;
     @Min(value = 1,message = "Price can't be less than 1")
-    private int price;
+    private Double price;
     @Min(value = 1,message = "Minimum of one product is required")
     private int quantity;
     @Embedded

@@ -9,11 +9,17 @@ import com.ecom.apis.model.ImageModel;
 import com.ecom.apis.model.Login;
 import com.ecom.apis.model.OTP;
 import com.ecom.apis.service.cart.CartService;
+import com.ecom.apis.service.order.OrderService;
 import com.ecom.apis.service.otp.OtpServiceInterface;
+import com.ecom.apis.service.paypal.PaypalServiceImpl;
 import com.ecom.apis.service.product.ProductService;
 import com.ecom.apis.service.user.UserServiceInterface;
+import com.paypal.api.payments.Links;
+import com.paypal.api.payments.Payment;
+import com.paypal.base.rest.PayPalRESTException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,12 +46,18 @@ public class ApiController {
     @Autowired
     private ProductService productService;
     @Autowired
-    AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
     @Autowired
-    JwtService jwtService;
+    private JwtService jwtService;
     @Autowired
-    CartService cartService;
+    private CartService cartService;
+    @Autowired
+    private PaypalServiceImpl paypalService;
+    @Autowired
+    private OrderService orderService;
 
+    @Value("${server.port}")
+    private String server;
 
     @GetMapping("/test")
     public void test() throws NotFoundException {
@@ -130,6 +142,47 @@ public class ApiController {
     @PreAuthorize("hasAuthority('USER')")
     public String rateProduct(@PathVariable("productId") Long productId, @PathVariable("rating") Double rating) throws NotFoundException {
         return productService.addRating(productId, rating);
+    }
+
+    @PostMapping("/user/pay")
+    @PreAuthorize("hasAuthority('USER')")
+    public String payment() {
+
+        try {
+            Double amount = cartService.cartAmount();
+            Payment payment = paypalService.createPayment(amount, "http://localhost:" + server + "/user/pay/cancel", "http://localhost:" + server + "/user/pay/success");
+            for (Links link : payment.getLinks()) {
+                if (link.getRel().equals("approval_url")) {
+                    return "redirect:" + link.getHref();
+                }
+            }
+
+        } catch (PayPalRESTException | NotFoundException e) {
+
+            return e.getMessage();
+        }
+        return "redirect:/";
+    }
+
+    @GetMapping("/user/pay/cancel")
+    @PreAuthorize("hasAuthority('USER')")
+    public String cancelPay() {
+        return "The initiated payment has been cancelled";
+    }
+
+    @GetMapping("/user/pay/success")
+    @PreAuthorize("hasAuthority('USER')")
+    public String successPay(@RequestParam("paymentId") String paymentId, @RequestParam("PayerID") String payerId) {
+        try {
+            Payment payment = paypalService.executePayment(paymentId, payerId);
+            System.out.println(payment.toJSON());
+            if (payment.getState().equals("approved")) {
+                return orderService.addOrder(payment.getCreateTime(), payment.getId());
+            }
+        } catch (PayPalRESTException | NotFoundException e) {
+            return e.getMessage();
+        }
+        return "redirect:/";
     }
 
     @PostMapping("/seller/addProducts")
