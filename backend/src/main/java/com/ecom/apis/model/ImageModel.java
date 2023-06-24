@@ -1,6 +1,9 @@
 package com.ecom.apis.model;
 
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.Objects;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
@@ -17,8 +21,10 @@ import java.util.zip.Inflater;
 @NoArgsConstructor
 @Builder
 public class ImageModel {
+    @NotBlank(message = "Provide the name of image")
     private String name;
     private MultipartFile image;
+    @Positive(message = "Provide valid productId")
     private Long productId;
 
     public static byte[] compressImage(byte[] data) {
