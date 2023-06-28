@@ -16,8 +16,7 @@ import java.util.List;
 @Builder
 public class Cart {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "cart_seq")
-    @SequenceGenerator(name = "cart_seq",sequenceName = "cart_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long cartId;
     @ManyToOne()
     @JoinColumn(name = "user_id")

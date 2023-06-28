@@ -21,8 +21,7 @@ import java.util.List;
 @Builder
 public class Products {
     @Id
-    @SequenceGenerator(name = "prod_seq",sequenceName = "prod_seq", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "prod_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long productId;
     @NotEmpty(message = "Product name is necessary")
     private String name;
@@ -34,7 +33,7 @@ public class Products {
     private int quantity;
     @Embedded
     private Specification specification;
-    @Min(value = 1000,message = "Enter a valid seller id")
+    @Min(value = 0,message = "Enter a valid seller id")
     private Long sellerId;
 
 }

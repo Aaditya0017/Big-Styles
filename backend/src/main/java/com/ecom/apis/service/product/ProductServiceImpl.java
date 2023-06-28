@@ -4,6 +4,7 @@ import com.ecom.apis.Jwt.JwtAuthFilter;
 import com.ecom.apis.entity.ImageData;
 import com.ecom.apis.entity.ProductRating;
 import com.ecom.apis.entity.Products;
+import com.ecom.apis.entity.UserEntity;
 import com.ecom.apis.exceptionHandling.exceptions.NotFoundException;
 import com.ecom.apis.model.ImageModel;
 import com.ecom.apis.repository.ImageRepository;
@@ -14,10 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ProductServiceImpl implements ProductService{
@@ -47,10 +45,20 @@ public class ProductServiceImpl implements ProductService{
 
     @Override
     public String addProducts(Products products) {
-        if(products.getName()==null && products.getPrice()==0 && products.getQuantity()==0 && products.getSpecification()==null)
-            return "all details are required";
-        else
-           return saveProduct(products);
+         if (!productRepository.existsByNameAndSellerId(products.getName(), products.getSellerId()))
+            return saveProduct(products);
+        else {
+            Products byNameAndSellerId = productRepository.findByNameAndSellerId(products.getName(), products.getSellerId());
+            if (byNameAndSellerId.getSale() == products.getSale() && byNameAndSellerId.getSalePrice() == products.getSalePrice()
+                    && byNameAndSellerId.getPrice().equals(products.getPrice())
+                    && byNameAndSellerId.getSpecification().getColor().equals(products.getSpecification().getColor())
+                    && byNameAndSellerId.getSpecification().getSize().equals(products.getSpecification().getSize())
+                    && byNameAndSellerId.getSpecification().getDetails().equals(products.getSpecification().getDetails())) {
+                productRepository.updateQuantity(byNameAndSellerId.getQuantity() + products.getQuantity(), products.getName(), products.getSellerId());
+                return "success";
+            } else
+                return saveProduct(products);
+        }
     }
 
     @Override
@@ -67,7 +75,7 @@ public class ProductServiceImpl implements ProductService{
     public String removeProduct(Long id) {
        if(productRepository.existsById(id)){
             productRepository.deleteById(id);
-            return "deleted success fully";
+            return "deleted successfully product with id "+id;
     }else return "no such product with id "+id;
     }
 
@@ -86,10 +94,13 @@ public class ProductServiceImpl implements ProductService{
 
     }
 
-    public byte[] showImage(Long id) throws NoSuchElementException {
-        Optional<ImageData> byId = imageRepository.findById(id);
-        if (byId.isEmpty()) throw new NoSuchElementException("No Such related Images");
-        else return ImageModel.decompressImage(byId.get().getImageData());
+    public List<byte[]> showImage(Long productId) throws NoSuchElementException, NotFoundException {
+        System.out.println(productId);
+        List<ImageData> byId = imageRepository.findImages(productId);
+        if (byId.size()<1) throw new NoSuchElementException("No Such related Images");
+        List<byte[]> data = new ArrayList<>();
+        byId.forEach(imageData -> {data.add(ImageModel.decompressImage(imageData.getImageData()));});
+        return data ;
     }
 
     @Override
@@ -99,10 +110,17 @@ public class ProductServiceImpl implements ProductService{
 
     @Override
     public String addRating(Long productId, Double rating) throws NotFoundException {
+        UserEntity userByEmail = userServiceImplement.getUserByEmail(jwtAuthFilter.getUser());
+        if(ratingRepository.existsByUser(userByEmail)){
+            ProductRating productRating=ratingRepository.findByUser(userByEmail);
+            productRating.setRating(rating);
+            ratingRepository.save(productRating);
+            return "success";
+        }
         ProductRating productRating= ProductRating.builder()
                 .products(findProductById(productId))
                 .rating(rating)
-                .user(userServiceImplement.getUserByEmail(jwtAuthFilter.getUser()))
+                .user(userByEmail)
                 .build();
         ratingRepository.save(productRating);
         return "success";
@@ -112,6 +130,13 @@ public class ProductServiceImpl implements ProductService{
     @Override
     public Double getProductRating(Long productId) throws NotFoundException {
         return ratingRepository.averageRating(findProductById(productId));
+    }
+
+    @Override
+    public String updateProductQuantity(Long productId, int quantity) throws NotFoundException {
+        Products product = findProductById(productId);
+        productRepository.updateQuantity(quantity ,product.getName(),product.getSellerId());
+        return "updated";
     }
 
 

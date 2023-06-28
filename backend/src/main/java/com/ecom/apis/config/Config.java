@@ -38,7 +38,9 @@ public class Config {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf().disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/registration","/authenticate","/","/verify","/sendmail/**","/forgetPass","/products","/test","/products/**").permitAll()
+                .requestMatchers("/registration","/authenticate","/","/verify","/sendmail/**"
+                        ,"/forgetPass","/products","/test","/products/**","/productRating/**","/viewImage/**","/swagger-ui.html",
+                        "/api/v1/auth/**","/v3/api-docs/**","/v3/api-docs.yaml","/swagger-ui/**","/swagger-ui.html").permitAll()
                 .and()
                 .authorizeHttpRequests().requestMatchers("/admin/**","/user/**","/seller/**")
                 .authenticated().and().sessionManagement()
@@ -48,6 +50,8 @@ public class Config {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
+
+
     @Bean
     public AuthenticationProvider authenticationProvider(){
         DaoAuthenticationProvider authenticationProvider=new DaoAuthenticationProvider();

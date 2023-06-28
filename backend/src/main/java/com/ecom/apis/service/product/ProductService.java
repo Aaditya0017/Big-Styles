@@ -19,11 +19,13 @@ public interface ProductService {
 
     String addProductImage(ImageModel imageData) throws IOException, NotFoundException;
 
-    byte[] showImage(Long id) throws NoSuchElementException;
+    List<byte[]> showImage(Long id) throws NoSuchElementException, NotFoundException;
 
     Products productFromId(Long productId) throws NoSuchElementException, NotFoundException;
 
     String addRating(Long productId, Double rating) throws NotFoundException;
 
     Double getProductRating(Long productId) throws NotFoundException;
+
+    String updateProductQuantity(Long productId, int quantity) throws NotFoundException;
 }

@@ -17,8 +17,7 @@ import java.util.Date;
 public class UserOtp {
 
     @Id
-    @SequenceGenerator(name = "otp_seq",sequenceName = "otp_seq", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "otp_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long otpId;
     @NotBlank(message = "Please provide the email of the user")
     private String email;

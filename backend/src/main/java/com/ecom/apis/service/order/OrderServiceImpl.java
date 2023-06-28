@@ -1,7 +1,6 @@
 package com.ecom.apis.service.order;
 
 import com.ecom.apis.Jwt.JwtAuthFilter;
-import com.ecom.apis.Jwt.JwtService;
 import com.ecom.apis.entity.Orders;
 import com.ecom.apis.entity.Products;
 import com.ecom.apis.entity.UserEntity;
@@ -18,7 +17,7 @@ import java.util.List;
 @Service
 public class OrderServiceImpl implements OrderService{
     @Autowired
-    JwtAuthFilter jwtAuthFilter;
+    private JwtAuthFilter jwtAuthFilter;
     @Autowired
     private UserServiceImplement userServiceImplement;
     @Autowired
@@ -40,5 +39,17 @@ public class OrderServiceImpl implements OrderService{
         orderRepository.save(order);
         productService.productQuantityUpdate(productsInCart);
         return "order has been placed";
+    }
+
+    @Override
+    public List<Orders> allOrders() {
+        return orderRepository.findAll();
+    }
+
+    @Override
+    public List<Orders> userOrders() throws NotFoundException {
+        List<Orders> allOrderByUser = orderRepository.findAllByUser(userServiceImplement.getUserByEmail(jwtAuthFilter.getUser()));
+        if (allOrderByUser==null) throw new NotFoundException( "No products for user "+jwtAuthFilter.getUser());
+        return allOrderByUser;
     }
 }

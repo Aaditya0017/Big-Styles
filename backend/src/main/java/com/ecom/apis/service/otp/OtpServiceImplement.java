@@ -6,11 +6,9 @@ import com.ecom.apis.exceptionHandling.exceptions.NotFoundException;
 import com.ecom.apis.model.ForgetPass;
 import com.ecom.apis.model.OTP;
 import com.ecom.apis.repository.UserOtpRepository;
-import com.ecom.apis.repository.UserRepository;
 import com.ecom.apis.service.Mailer;
 import com.ecom.apis.service.user.UserServiceImplement;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -25,16 +23,18 @@ public class OtpServiceImplement implements OtpServiceInterface {
     private Mailer mailer;
     @Autowired
     private UserServiceImplement userService;
+
+
+
     @Override
     public String sendOtp(String email) {
         if(email==null) return "email is compulsory";
         String otp =otpGenerator();
         UserOtp user = userOtpRepository.findUserOtpByEmail(email);
-        if(Objects.isNull(user)){
+        if(Objects.isNull(user))
             user = UserOtp.builder().code(otp).email(email).build();
-        } else {
+        else
             user.setCode(otp);
-        }
         user.setExpiration(new Date(System.currentTimeMillis() + 1000*60*60));
         userOtpRepository.save(user);
         mailer.sendMail(email,otp);
@@ -53,14 +53,14 @@ public class OtpServiceImplement implements OtpServiceInterface {
     @Override
     public String verify(OTP otp) throws NotFoundException {
         UserOtp userOtp = userOtpRepository.findUserOtpByEmail(otp.getEmail());
-        if (userOtp==null) return "otp not sent, please send again";
+        if (userOtp==null) return "otp not sent, please send again for email "+otp.getEmail();
         if(otp.getOtp().equals(userOtp.getCode())) {
             if(!userOtp.getExpiration().before(new Date())) {
                 UserEntity user = userService.getUserByEmail(otp.getEmail());
                 user.setVerified(1);
                 return userService.saveUser(user);
-            }else return "Otp expired";
-        }else return "wrong otp "+otp;
+            }else return "Otp expired "+otp.getOtp();
+        }else return "wrong otp "+otp.getOtp();
     }
 
     @Override

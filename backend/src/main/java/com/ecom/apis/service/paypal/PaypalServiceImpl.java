@@ -27,7 +27,7 @@ public class PaypalServiceImpl implements PaypalService{
             String cancelUrl,
             String successUrl) throws PayPalRESTException{
         Amount amount = new Amount();
-        amount.setCurrency("INR");
+        amount.setCurrency("USD");
         total = new BigDecimal(total).setScale(2, RoundingMode.HALF_UP).doubleValue();
         amount.setTotal(String.format("%.2f", total));
 

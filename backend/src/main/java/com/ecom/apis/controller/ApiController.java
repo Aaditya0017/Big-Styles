@@ -1,6 +1,7 @@
 package com.ecom.apis.controller;
 
 import com.ecom.apis.Jwt.JwtService;
+import com.ecom.apis.entity.Orders;
 import com.ecom.apis.entity.Products;
 import com.ecom.apis.entity.UserEntity;
 import com.ecom.apis.exceptionHandling.exceptions.NotFoundException;
@@ -20,9 +21,11 @@ import com.paypal.base.rest.PayPalRESTException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,7 +33,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -120,24 +126,124 @@ public class ApiController {
         return productService.getProductRating(productId);
     }
 
+    //fine
+    @PostMapping("/admin/add")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public String adminAdd(@RequestBody @Valid UserEntity userEntity) {
+        return userServiceInterface.adminAdd(userEntity);
+    }
+
+    //fine
+    @GetMapping("/admin/users")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public List<UserEntity> listOfAllUser(){
+        return userServiceInterface.findAllUser();
+    }
+
+    //fine
+    @DeleteMapping("/admin/remove/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public String removeSeller(@PathVariable("id") Long id) throws NotFoundException {
+        if (id == null) return "id is null";
+        return userServiceInterface.remove(id);
+    }
+
+
+
+    @GetMapping("/admin/orders")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public List<Orders> getAllOrders(){
+        return orderService.allOrders();
+    }
+
+    //fine
+    @PostMapping("/seller/addProducts")
+    @PreAuthorize("hasAuthority('SELLER')")
+    public String addNewProduct(@RequestBody @Valid Products products) {
+        return productService.addProducts(products);
+    }
+
+    //fine
+    @GetMapping("/seller/products/{id}")
+    @PreAuthorize("hasAuthority('SELLER')")
+    public List<Products> sellerProducts(@PathVariable("id") Long id) {
+        return productService.sellerProducts(id);
+    }
+
+    //fine
+    @DeleteMapping("/seller/removeProduct/{id}")
+    @PreAuthorize("hasAuthority('SELLER')")
+    public String removeProduct(@PathVariable("id") Long id) throws NotFoundException {
+        if (id == null) return "id is null";
+        return productService.removeProduct(id);
+    }
+
+
+    //fine
+    @PostMapping("/seller/addImage")
+    @PreAuthorize("hasAuthority('SELLER')")
+    public String addProductImage(@ModelAttribute @Valid ImageModel imageData) throws IOException, NotFoundException {
+        return productService.addProductImage(imageData);
+    }
+
+    //fine
+    @PutMapping("/seller/updateProduct/{productId}/{quantity}")
+    @PreAuthorize("hasAuthority('SELLER')")
+    public String updateProductQuantity(@PathVariable("productId") Long productId, @PathVariable("quantity") int quantity) throws  NotFoundException {
+        return productService.updateProductQuantity(productId,quantity);
+    }
+
+
+    @GetMapping(value = "/viewImage/{id}")
+    public List<ResponseEntity<byte[]>> viewImage(@PathVariable("id") Long id) throws NoSuchElementException, NotFoundException {
+        List<byte[]> bytes = productService.showImage(id);
+        List<ResponseEntity<byte[]>> responseEntities = new ArrayList<>();
+
+        for (byte[] imageBytes : bytes) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_PNG);
+
+            ResponseEntity<byte[]> responseEntity = ResponseEntity.ok()
+                    .headers(headers)
+                    .body(imageBytes);
+
+            responseEntities.add(responseEntity);
+        }
+        return responseEntities;
+    }
+
+
+
+    //fine
     @GetMapping("/user/addToCart/{id}/{quantity}")
     @PreAuthorize("hasAuthority('USER')")
     public String addToCart(@PathVariable("id") String productID, @PathVariable("quantity") int quantity) throws NoSuchElementException, NotFoundException {
         return cartService.addToCart(productID, quantity);
     }
 
+    //fine
+    @PutMapping("/user/cartItem/{id}/{quantity}")
+    @PreAuthorize("hasAuthority('USER')")
+    public String updateCartItemQuantity(@PathVariable("id") String productID, @PathVariable("quantity") int quantity) throws  NotFoundException {
+        return cartService.updateProductQuantity(productID, quantity);
+    }
+
+    //fine
     @GetMapping("/user/cartProducts")
     @PreAuthorize("hasAuthority('USER')")
     public Map<Products, Long> ListOfCartProducts() throws NotFoundException {
         return cartService.listOfProducts();
     }
 
+
+    //fine
     @DeleteMapping("/user/removeCartItem/{id}")
     @PreAuthorize("hasAuthority('USER')")
-    public String deleteCartItem(@PathVariable("id") Long cartProductID) throws NoSuchElementException, NotFoundException {
-        return cartService.deleteCartItem(cartProductID);
+    public String deleteCartItem(@PathVariable("id") Long cartID) throws NoSuchElementException, NotFoundException {
+        return cartService.deleteCartItem(cartID);
     }
 
+    //fine
     @GetMapping("/user/rating/{productId}/{rating}")
     @PreAuthorize("hasAuthority('USER')")
     public String rateProduct(@PathVariable("productId") Long productId, @PathVariable("rating") Double rating) throws NotFoundException {
@@ -146,8 +252,8 @@ public class ApiController {
 
     @PostMapping("/user/pay")
     @PreAuthorize("hasAuthority('USER')")
-    public String payment() {
-
+    public String payment() throws NotFoundException {
+        cartService.validateCartQuantity();
         try {
             Double amount = cartService.cartAmount();
             Payment payment = paypalService.createPayment(amount, "http://localhost:" + server + "/user/pay/cancel", "http://localhost:" + server + "/user/pay/success");
@@ -156,9 +262,7 @@ public class ApiController {
                     return "redirect:" + link.getHref();
                 }
             }
-
         } catch (PayPalRESTException | NotFoundException e) {
-
             return e.getMessage();
         }
         return "redirect:/";
@@ -185,51 +289,11 @@ public class ApiController {
         return "redirect:/";
     }
 
-    @PostMapping("/seller/addProducts")
-    @PreAuthorize("hasAuthority('SELLER')")
-    public String addNewProduct(@RequestBody @Valid Products products) {
-        return productService.addProducts(products);
+    @GetMapping("/user/orders")
+    @PreAuthorize("hasAuthority('USER')")
+    public List<Orders> userAllOrders() throws NotFoundException {
+        return orderService.userOrders();
     }
 
-
-    @GetMapping("/seller/products/{id}")
-    @PreAuthorize("hasAuthority('SELLER')")
-    public List<Products> sellerProducts(@PathVariable("id") Long id) {
-        return productService.sellerProducts(id);
-    }
-
-    @DeleteMapping("/seller/removeProduct/{id}")
-    @PreAuthorize("hasAuthority('SELLER')")
-    public String removeProduct(@PathVariable("id") Long id) throws NotFoundException {
-        if (id == null) return "id is null";
-        return productService.removeProduct(id);
-    }
-
-    @PostMapping("/seller/addImage")
-    @PreAuthorize("hasAuthority('SELLER')")
-    public String addProductImage(@ModelAttribute @Valid ImageModel imageData) throws IOException, NotFoundException {
-        return productService.addProductImage(imageData);
-    }
-
-    @GetMapping("/seller/viewImage/{id}")
-    @PreAuthorize("hasAuthority('SELLER')")
-    public ResponseEntity<?> viewImage(@PathVariable("id") Long id) throws NoSuchElementException {
-        byte[] bytes = productService.showImage(id);
-        return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.valueOf("image/png")).body(bytes);
-    }
-
-    @PostMapping("/admin/add")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public String adminAdd(@RequestBody @Valid UserEntity userEntity) {
-        return userServiceInterface.adminAdd(userEntity);
-    }
-
-
-    @DeleteMapping("/admin/remove/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public String removeSeller(@PathVariable("id") Long id) throws NotFoundException {
-        if (id == null) return "id is null";
-        return userServiceInterface.remove(id);
-    }
 
 }

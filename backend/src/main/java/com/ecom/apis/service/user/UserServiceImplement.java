@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -26,6 +27,11 @@ public class UserServiceImplement implements UserServiceInterface {
     }
 
     @Override
+    public List<UserEntity> findAllUser() {
+        return userRepository.findAll();
+    }
+
+    @Override
     public String addUser(UserEntity userEntity) {
             userEntity.setUserPassword(passwordEncoder.encode(userEntity.getUserPassword()));
             userEntity.setConfirmPassword(passwordEncoder.encode(userEntity.getConfirmPassword()));
@@ -41,21 +47,17 @@ public class UserServiceImplement implements UserServiceInterface {
             userRepository.deleteByUserId(id);
             return "User mapped to id "+id+" has been removed";
             }
-        else {
-            throw new NotFoundException("user not found : "+id);
-        }
+        else throw new NotFoundException("user not found : " + id);
     }
 
     @Override
     public String adminAdd(UserEntity userEntity) {
         if(userEntity!= null && userEntity.getUserPassword()!=null && userEntity.getUserEmail()!=null
                 && userEntity.getPhoneNumber()!=0 && userEntity.getAddress()!=null) {
-
             userEntity.setUserPassword(passwordEncoder.encode(userEntity.getUserPassword()));
             userEntity.setConfirmPassword(passwordEncoder.encode(userEntity.getConfirmPassword()));
             userEntity.setVerified(1);
             return saveUser(userEntity);
-
         }
         else return "check details";
     }

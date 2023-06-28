@@ -15,8 +15,7 @@ import org.hibernate.validator.constraints.UniqueElements;
 @Table(name = "User",uniqueConstraints = {@UniqueConstraint(columnNames = {"userEmail","phoneNumber"})})
 public class UserEntity {
     @Id
-    @SequenceGenerator(name = "user_seq",sequenceName = "user_seq", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "user_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long userId;
     @NotNull(message = "Valid username not provided")
     private String userName;

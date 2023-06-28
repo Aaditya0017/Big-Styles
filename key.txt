@@ -1,7 +1,0 @@
-spring.mail.username=collegebuddy4u@gmail.com
-spring.mail.password=hkufycvhxxbrrbwp
-spring.mail.properties.mail.smtp.auth= true
-spring.mail.properties.mail.smtp.starttls.enable= true
-paypal.mode=sandbox
-paypal.client.id=AdLyjDnV7iQ58v1ezEUzyLHaRc5qZsk1V11qH1H8DTQi1BX0bY9jT8o7f6ZpX5VdU-5M4oWVlXrqITli
-paypal.client.secret=EIdXItVlbbHmmo0CWn8S07915ckmIIQbeqWEgnbEF9sxScnc4DD-8NpIaoCO5fjJy_0fsy2_Htk3fc6O

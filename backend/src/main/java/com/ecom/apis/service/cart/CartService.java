@@ -15,4 +15,7 @@ public interface CartService {
 
     Double cartAmount() throws NotFoundException;
 
+    void validateCartQuantity() throws NotFoundException;
+
+    String updateProductQuantity(String productID, int quantity) throws NotFoundException;
 }
